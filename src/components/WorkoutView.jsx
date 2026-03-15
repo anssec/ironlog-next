@@ -3,14 +3,74 @@ import { uid, sf, si, calcVol, fmtDur, fmtShort, fmtVol, SET_TYPES, MUSCLE_COLOR
 import { useWorkoutTimer, useRestTimer } from '@/hooks'
 import ExercisePicker from './ExercisePicker'
 
+// ── Inline Confirm Dialog (replaces window.confirm for mobile) ──
+function ConfirmSheet({ message, onYes, onNo }) {
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onNo()}>
+      <div className="modal" style={{ maxWidth:'340px' }}>
+        <div style={{ textAlign:'center', padding:'10px 0 20px' }}>
+          <div style={{ fontSize:'40px', marginBottom:'14px' }}>⚠️</div>
+          <div style={{ fontSize:'16px', fontWeight:'600', marginBottom:'6px' }}>{message}</div>
+          <div style={{ fontSize:'13px', color:'var(--text3)' }}>This action cannot be undone.</div>
+        </div>
+        <div style={{ display:'flex', gap:'10px' }}>
+          <button className="btn btn-ghost" style={{ flex:1, justifyContent:'center' }} onClick={onNo}>Cancel</button>
+          <button className="btn btn-danger" style={{ flex:1, justifyContent:'center' }} onClick={onYes}>Discard</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function WorkoutView({ allEx, routines, history, onSave, toast }) {
   const [sess,     setSess]     = useState(null)
   const [saving,   setSaving]   = useState(false)
   const [showPick, setShowPick] = useState(false)
   const [showR,    setShowR]    = useState(false)
+  const [showDiscard, setShowDiscard] = useState(false)
 
   const elapsed = useWorkoutTimer(!!sess)
   const rest    = useRestTimer()
+
+  // Get previous workout sets for an exercise
+  const getPrevSets = (exerciseId) => {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const ex = history[i].exercises?.find(e => e.exerciseId === exerciseId)
+      if (ex && (ex.sets || []).some(s => s.done)) {
+        return { workout: history[i], ex, sets: (ex.sets || []).filter(s => s.done) }
+      }
+    }
+    return null
+  }
+
+  // Create sets prefilled from previous workout data
+  const makePrefilled = (exerciseId, templateSets) => {
+    const prev = getPrevSets(exerciseId)
+    const prevSets = prev ? prev.sets : []
+
+    if (templateSets && templateSets.length > 0) {
+      // From routine — use template count but prefill w/r from previous
+      return templateSets.map((s, i) => ({
+        ...s,
+        id: uid(),
+        done: false,
+        w: prevSets[i]?.w ?? s.w ?? '',
+        r: prevSets[i]?.r ?? s.r ?? '',
+      }))
+    } else if (prevSets.length > 0) {
+      // No template — prefill from previous
+      return prevSets.map(s => ({
+        id: uid(),
+        type: s.type || 'Normal',
+        w: s.w ?? '',
+        r: s.r ?? '',
+        done: false,
+      }))
+    } else {
+      // No previous data — single empty set
+      return [{ id: uid(), type: 'Normal', w: '', r: '', done: false }]
+    }
+  }
 
   const startBlank = () => setSess({ id: uid(), name: 'Quick Workout', exercises: [], startTime: Date.now() })
 
@@ -19,16 +79,17 @@ export default function WorkoutView({ allEx, routines, history, onSave, toast })
       id: uid(), name: r.name, startTime: Date.now(),
       exercises: (r.exercises || []).map(e => ({
         ...e, uid: uid(),
-        sets: (e.sets || []).map(s => ({ ...s, id: uid(), done: false })),
+        sets: makePrefilled(e.exerciseId, e.sets),
       })),
     })
     setShowR(false)
   }
 
   const addExercise = (ex) => {
+    const prefilled = makePrefilled(ex.id, null)
     setSess(s => ({ ...s, exercises: [...(s.exercises || []), {
       uid: uid(), exerciseId: ex.id, name: ex.name, muscle: ex.muscle,
-      sets: [{ id: uid(), type: 'Normal', w: '', r: '', done: false }],
+      sets: prefilled,
     }]}))
     setShowPick(false)
   }
@@ -96,7 +157,12 @@ export default function WorkoutView({ allEx, routines, history, onSave, toast })
     finally { setSaving(false) }
   }
 
-  const discard = () => { if (confirm('Discard this workout?')) { setSess(null); rest.skip() } }
+  const doDiscard = () => {
+    setSess(null)
+    rest.skip()
+    setShowDiscard(false)
+    toast('Workout discarded')
+  }
 
   const getPrev = (eid) => {
     for (let i = history.length - 1; i >= 0; i--) {
@@ -188,7 +254,7 @@ export default function WorkoutView({ allEx, routines, history, onSave, toast })
           <span style={{ fontSize:'13px', color:'var(--text2)' }}>Sets: <strong>{tDone}</strong></span>
         </div>
         <div style={{ display:'flex', gap:'8px' }}>
-          <button className="btn btn-sm btn-danger" style={{ flex:1, justifyContent:'center' }} onClick={discard}>Discard</button>
+          <button className="btn btn-sm btn-danger" style={{ flex:1, justifyContent:'center' }} onClick={() => setShowDiscard(true)}>Discard</button>
           <button className="btn btn-sm btn-primary" style={{ flex:2, justifyContent:'center' }} onClick={finish} disabled={saving}>
             {saving ? 'Saving…' : '✓ Finish Workout'}
           </button>
@@ -286,6 +352,15 @@ export default function WorkoutView({ allEx, routines, history, onSave, toast })
       </button>
 
       {showPick && <ExercisePicker exercises={allEx} onSelect={addExercise} onClose={() => setShowPick(false)} />}
+
+      {/* Custom discard confirm sheet */}
+      {showDiscard && (
+        <ConfirmSheet
+          message="Discard this workout?"
+          onYes={doDiscard}
+          onNo={() => setShowDiscard(false)}
+        />
+      )}
     </div>
   )
 }
