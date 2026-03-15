@@ -7,60 +7,47 @@ import EditProfileModal from '@/components/EditProfile'
 import WorkoutView from '@/components/WorkoutView'
 import { RoutinesView, HistoryView, ExercisesView, StatsView, ProfileView } from '@/components/Views'
 
-// ── USER MENU ──────────────────────────────────────────────────────────────────
-function UserMenu({ user, onLogout, onProfile }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
-
+// ── MOBILE HEADER ────────────────────────────────────────────────────────────
+function MobileHeader({ user, thisWeek, onProfile }) {
   const initials = ((user.name || 'U').trim() || 'U').split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
 
   return (
-    <div ref={ref} style={{ position:'relative' }}>
-      <div onClick={() => setOpen(o => !o)}
-        style={{ display:'flex', alignItems:'center', gap:'8px', background:'var(--bg3)', border:'1px solid var(--border2)', borderRadius:'20px', padding:'5px 14px 5px 8px', cursor:'pointer' }}>
-        <div style={{ width:'26px', height:'26px', borderRadius:'50%', background:'linear-gradient(135deg,var(--accent),#88cc00)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'700', color:'#000', flexShrink:0 }}>
+    <header className="app-header">
+      <div className="logo">IRONLOG</div>
+      <div style={{ flex:1 }} />
+      <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'5px', background:'var(--bg3)', border:'1px solid var(--border2)', borderRadius:'20px', padding:'4px 10px', fontSize:'11px', color:'var(--text2)' }}>
+          <div style={{ width:'6px', height:'6px', borderRadius:'50%', background:'var(--green)', boxShadow:'0 0 5px var(--green)' }} />
+          {thisWeek} this week
+        </div>
+        <div onClick={onProfile}
+          style={{ width:'32px', height:'32px', borderRadius:'50%', background:'linear-gradient(135deg,var(--accent),#88cc00)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'700', color:'#000', flexShrink:0, cursor:'pointer' }}>
           {initials}
         </div>
-        <span style={{ fontSize:'13px', maxWidth:'100px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-          {(user.name || 'User').split(' ')[0]}
-        </span>
-        <span style={{ fontSize:'10px', color:'var(--text3)' }}>{open ? '▲' : '▼'}</span>
       </div>
+    </header>
+  )
+}
 
-      {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'12px', padding:'8px', minWidth:'200px', boxShadow:'0 8px 32px rgba(0,0,0,.5)', zIndex:100, animation:'mUp .15s' }}>
-          <div style={{ padding:'10px 12px 12px', borderBottom:'1px solid var(--border)', marginBottom:'6px' }}>
-            <div style={{ fontWeight:'600', fontSize:'14px' }}>{user.name}</div>
-            <div style={{ fontSize:'11.5px', color:'var(--text3)', marginTop:'2px' }}>{user.email}</div>
-          </div>
-          <div onClick={() => { onProfile(); setOpen(false) }}
-            style={{ display:'flex', alignItems:'center', gap:'10px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', fontSize:'13.5px', color:'var(--text2)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--hover)'; e.currentTarget.style.color = 'var(--text)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text2)' }}>
-            Edit Profile
-          </div>
-          <div onClick={() => { onLogout(); setOpen(false) }}
-            style={{ display:'flex', alignItems:'center', gap:'10px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', fontSize:'13.5px', color:'var(--red)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,.1)'}
-            onMouseLeave={e => e.currentTarget.style.background = ''}>
-            Sign Out
-          </div>
+// ── BOTTOM TAB BAR ──────────────────────────────────────────────────────────
+function BottomNav({ tab, onTab }) {
+  return (
+    <nav className="mobile-nav">
+      {NAV.map(n => (
+        <div key={n.id}
+          className={`mobile-nav-item${tab === n.id ? ' active' : ''}`}
+          onClick={() => onTab(n.id)}>
+          <span className="mobile-nav-icon">{n.icon}</span>
+          <span className="mobile-nav-label">{n.label}</span>
         </div>
-      )}
-    </div>
+      ))}
+    </nav>
   )
 }
 
 // ── APP ────────────────────────────────────────────────────────────────────────
 export default function Home() {
   const { user, loading: authLoading, login, logout: _logout, updateUser } = useAuth()
-
   const { msg, toast } = useToast()
 
   const [authPage,     setAuthPage]     = useState('login')
@@ -82,8 +69,7 @@ export default function Home() {
 
   const allEx = useMemo(() => [...EX_LIB, ...customEx], [customEx])
 
-  // Wire up 401 handler — show message and redirect to login
-  // useRef keeps toast stable so the handler always has the latest version
+  // Wire up 401 handler
   const toastRef = useRef(toast)
   useEffect(() => { toastRef.current = toast }, [toast])
 
@@ -135,7 +121,7 @@ export default function Home() {
 
   // ── LOADING SCREEN ──
   if (authLoading) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg)', gap:'14px' }}>
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', height:'100dvh', background:'var(--bg)', gap:'14px' }}>
       <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'36px', color:'var(--accent)', letterSpacing:'4px' }}>IRONLOG</div>
       <div className="spinner" />
       <Toast msg={msg} />
@@ -155,75 +141,32 @@ export default function Home() {
 
   // ── DATA LOADING ──
   if (dataLoading) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg)', gap:'14px' }}>
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', height:'100dvh', background:'var(--bg)', gap:'14px' }}>
       <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'36px', color:'var(--accent)', letterSpacing:'4px' }}>IRONLOG</div>
       <div className="spinner" />
       <div style={{ fontSize:'13px', color:'var(--text3)' }}>Loading your data…</div>
     </div>
   )
 
-  // ── MAIN APP ──
+  // ── MAIN MOBILE APP ──
   return (
-    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh' }}>
-      {/* Header */}
-      <header className="app-header">
-        <div className="logo">IRONLOG</div>
-        <div style={{ fontSize:'11px', color:'var(--text3)', letterSpacing:'2px', textTransform:'uppercase' }}>Workout Tracker</div>
-        <div style={{ marginLeft:'auto', display:'flex', gap:'8px', alignItems:'center' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'6px', background:'var(--bg3)', border:'1px solid var(--border2)', borderRadius:'20px', padding:'4px 12px', fontSize:'12px', color:'var(--text2)' }}>
-            <div style={{ width:'6px', height:'6px', borderRadius:'50%', background:'var(--green)', boxShadow:'0 0 5px var(--green)' }} />
-            {thisWeek} this week
-          </div>
-          <UserMenu user={user} onLogout={logout} onProfile={() => setShowProfile(true)} />
-        </div>
-      </header>
+    <div className="app-shell">
+      <MobileHeader user={user} thisWeek={thisWeek} onProfile={() => setTab('profile')} />
 
       <div className="app-wrap">
-        {/* Sidebar */}
-        <nav className="sidebar">
-          <div style={{ fontSize:'10px', color:'var(--text3)', letterSpacing:'1.5px', textTransform:'uppercase', padding:'10px 10px 5px', marginTop:'6px' }}>Menu</div>
-          {NAV.map(n => (
-            <div key={n.id} className={`nav-item${tab === n.id ? ' active' : ''}`} onClick={() => setTab(n.id)}>
-              <span style={{ fontSize:'15px', width:'18px', textAlign:'center', flexShrink:0 }}>{n.icon}</span>
-              <span>{n.label}</span>
-              {n.id === 'history' && history.length > 0 && (
-                <span className="nav-badge">{history.length}</span>
-              )}
-            </div>
-          ))}
-
-          <div style={{ height:'1px', background:'var(--border)', margin:'12px 0' }} />
-          <div style={{ padding:'2px 10px' }}>
-            <div style={{ fontSize:'10px', color:'var(--text3)', letterSpacing:'1px', textTransform:'uppercase', marginBottom:'5px' }}>Your Data</div>
-            <div style={{ fontSize:'11.5px', color:'var(--text3)', lineHeight:'2.1' }}>
-              <div>{history.length} workouts</div>
-              <div>{routines.length} routines</div>
-              <div>{allEx.length} exercises</div>
-            </div>
-          </div>
-        </nav>
-
-        {/* Main content */}
         <main className="main">
-          {tab === 'workout'   && <WorkoutView   allEx={allEx} routines={routines} history={history} onSave={saveWorkout} toast={toast} />}
-          {tab === 'routines'  && <RoutinesView  allEx={allEx} routines={routines} onSave={saveRoutine} onDelete={delRoutine} toast={toast} />}
-          {tab === 'history'   && <HistoryView   history={history} onDelete={delWorkout} toast={toast} />}
-          {tab === 'exercises' && <ExercisesView allEx={allEx} onAdd={addCustomEx} onDelete={delCustomEx} toast={toast} />}
-          {tab === 'stats'     && <StatsView     history={history} allEx={allEx} />}
-          {tab === 'profile'   && <ProfileView   history={history} allEx={allEx} user={user} onLogout={logout} onEditProfile={() => setShowProfile(true)} />}
+          <div className="view-enter" key={tab}>
+            {tab === 'workout'   && <WorkoutView   allEx={allEx} routines={routines} history={history} onSave={saveWorkout} toast={toast} />}
+            {tab === 'routines'  && <RoutinesView  allEx={allEx} routines={routines} onSave={saveRoutine} onDelete={delRoutine} toast={toast} />}
+            {tab === 'history'   && <HistoryView   history={history} onDelete={delWorkout} toast={toast} />}
+            {tab === 'exercises' && <ExercisesView allEx={allEx} onAdd={addCustomEx} onDelete={delCustomEx} toast={toast} />}
+            {tab === 'stats'     && <StatsView     history={history} allEx={allEx} />}
+            {tab === 'profile'   && <ProfileView   history={history} allEx={allEx} user={user} onLogout={logout} onEditProfile={() => setShowProfile(true)} />}
+          </div>
         </main>
       </div>
 
-      {/* Mobile nav */}
-      <nav className="mobile-nav">
-        {NAV.map(n => (
-          <div key={n.id} onClick={() => setTab(n.id)}
-            style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'2px', padding:'3px 8px', cursor:'pointer', color: tab === n.id ? 'var(--accent)' : 'var(--text3)', transition:'color .15s' }}>
-            <span style={{ fontSize:'18px' }}>{n.icon}</span>
-            <span style={{ fontSize:'8.5px', fontWeight:'700', letterSpacing:'.5px', textTransform:'uppercase' }}>{n.label}</span>
-          </div>
-        ))}
-      </nav>
+      <BottomNav tab={tab} onTab={setTab} />
 
       {showProfile && (
         <EditProfileModal user={user} onClose={() => setShowProfile(false)} onUpdate={updateUser} toast={toast} />

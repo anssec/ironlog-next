@@ -4,18 +4,23 @@ export function Modal({ title, onClose, children, xl = false }) {
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', h)
-    return () => document.removeEventListener('keydown', h)
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', h)
+      document.body.style.overflow = ''
+    }
   }, [onClose])
 
   return (
     <div className="overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal${xl ? ' modal-xl' : ''}`}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'18px' }}>
-          <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'21px', letterSpacing:'1px' }}>{title}</div>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px' }}>
+          <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'20px', letterSpacing:'1px' }}>{title}</div>
           <button
             onClick={onClose}
-            style={{ width:'28px', height:'28px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg3)', border:'1px solid var(--border)', color:'var(--text2)', cursor:'pointer', fontSize:'14px' }}
-          >x</button>
+            style={{ width:'32px', height:'32px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg3)', border:'1px solid var(--border)', color:'var(--text2)', cursor:'pointer', fontSize:'14px', flexShrink:0 }}
+          >✕</button>
         </div>
         {children}
       </div>
@@ -43,10 +48,10 @@ export function Spinner({ text = 'Loading…' }) {
 
 export function Empty({ icon = '📭', title, desc, action }) {
   return (
-    <div style={{ textAlign:'center', padding:'36px 16px' }}>
-      <div style={{ fontSize:'42px', marginBottom:'12px' }}>{icon}</div>
-      <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'21px', color:'var(--text2)', marginBottom:'5px' }}>{title}</div>
-      {desc && <div style={{ color:'var(--text3)', fontSize:'13px', lineHeight:'1.5', marginBottom:'14px' }}>{desc}</div>}
+    <div style={{ textAlign:'center', padding:'40px 20px' }}>
+      <div style={{ fontSize:'48px', marginBottom:'14px' }}>{icon}</div>
+      <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'20px', color:'var(--text2)', marginBottom:'6px' }}>{title}</div>
+      {desc && <div style={{ color:'var(--text3)', fontSize:'14px', lineHeight:'1.5', marginBottom:'16px' }}>{desc}</div>}
       {action}
     </div>
   )
@@ -54,12 +59,12 @@ export function Empty({ icon = '📭', title, desc, action }) {
 
 export function PageHeader({ title, sub, action }) {
   return (
-    <div style={{ marginBottom:'20px' }}>
+    <div style={{ marginBottom:'18px' }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'25px', letterSpacing:'1px', lineHeight:'1' }}>{title}</div>
+        <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'24px', letterSpacing:'1px', lineHeight:'1' }}>{title}</div>
         {action}
       </div>
-      {sub && <div style={{ color:'var(--text2)', fontSize:'13px', marginTop:'3px' }}>{sub}</div>}
+      {sub && <div style={{ color:'var(--text2)', fontSize:'13px', marginTop:'4px' }}>{sub}</div>}
     </div>
   )
 }

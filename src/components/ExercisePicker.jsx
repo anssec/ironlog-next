@@ -18,44 +18,43 @@ export default function ExercisePicker({ exercises, onSelect, onClose }) {
       <div style={{ position:'relative', marginBottom:'12px' }}>
         <input className="input" autoFocus placeholder="Search exercises…"
           value={q} onChange={e => setQ(e.target.value)}
-          style={{ paddingLeft:'34px' }} />
-        <span style={{ position:'absolute', left:'11px', top:'50%', transform:'translateY(-50%)', color:'var(--text3)', fontSize:'14px', pointerEvents:'none' }}>&#128269;</span>
+          style={{ paddingLeft:'38px' }} />
+        <span style={{ position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:'var(--text3)', fontSize:'16px', pointerEvents:'none' }}>🔍</span>
       </div>
 
-      <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', marginBottom:'8px' }}>
+      {/* Horizontal scroll filter chips */}
+      <div className="filter-chips" style={{ marginBottom:'8px' }}>
         {MUSCLES.map(m => (
           <button key={m} className={`btn btn-sm ${mu === m ? 'btn-primary' : 'btn-ghost'}`}
+            style={{ flexShrink:0 }}
             onClick={() => setMu(m)}>{m}</button>
         ))}
       </div>
 
-      <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', marginBottom:'14px' }}>
+      <div className="filter-chips" style={{ marginBottom:'14px' }}>
         {EQUIP.map(e => (
           <button key={e} className={`btn btn-sm ${eq === e ? 'btn-secondary' : 'btn-ghost'}`}
-            style={eq === e ? { borderColor:'var(--text2)' } : {}}
+            style={{ flexShrink:0, ...(eq === e ? { borderColor:'var(--text2)' } : {}) }}
             onClick={() => setEq(e)}>{e}</button>
         ))}
       </div>
 
-      <div style={{ maxHeight:'320px', overflowY:'auto', display:'flex', flexDirection:'column', gap:'5px' }}>
+      <div style={{ maxHeight:'50vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:'6px', WebkitOverflowScrolling:'touch' }}>
         {list.length === 0 && (
-          <div style={{ textAlign:'center', padding:'24px', color:'var(--text3)' }}>No exercises found</div>
+          <div style={{ textAlign:'center', padding:'30px', color:'var(--text3)', fontSize:'14px' }}>No exercises found</div>
         )}
         {list.map(ex => (
           <div key={ex.id}
             onClick={() => onSelect(ex)}
-            style={{ background:'var(--card2)', border:'1px solid var(--border)', borderRadius:'9px', padding:'12px 14px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', transition:'all .15s' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-border)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-          >
+            style={{ background:'var(--card2)', border:'1px solid var(--border)', borderRadius:'12px', padding:'14px 16px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', transition:'all .15s', minHeight:'56px' }}>
             <div>
-              <div style={{ fontWeight:'500', fontSize:'13.5px' }}>{ex.name}</div>
+              <div style={{ fontWeight:'500', fontSize:'14px' }}>{ex.name}</div>
               <div style={{ display:'flex', gap:'8px', marginTop:'4px' }}>
-                <span style={{ fontSize:'10.5px', color: MUSCLE_COLOR[ex.muscle] || 'var(--text3)' }}>&#9679; {ex.muscle}</span>
-                <span style={{ fontSize:'11.5px', color:'var(--text3)' }}>{ex.equip}</span>
+                <span style={{ fontSize:'11px', color: MUSCLE_COLOR[ex.muscle] || 'var(--text3)' }}>● {ex.muscle}</span>
+                <span style={{ fontSize:'12px', color:'var(--text3)' }}>{ex.equip}</span>
               </div>
             </div>
-            <span style={{ color:'var(--text3)', fontSize:'18px' }}>+</span>
+            <span style={{ color:'var(--accent)', fontSize:'22px', fontWeight:'300' }}>+</span>
           </div>
         ))}
       </div>
