@@ -64,14 +64,14 @@ export function RoutinesView({ allEx, routines, onSave, onDelete, toast }) {
       ))}
 
       {(creating || editing) && (
-        <RoutineEditor routine={editing} allEx={allEx} busy={busy}
+        <RoutineEditor routine={editing} allEx={allEx} busy={busy} toast={toast}
           onSave={save} onClose={() => { setEditing(null); setCreating(false) }} />
       )}
     </div>
   )
 }
 
-function RoutineEditor({ routine, allEx, onSave, onClose, busy }) {
+function RoutineEditor({ routine, allEx, onSave, onClose, busy, toast }) {
   const [name,  setName]  = useState(routine?.name || '')
   const [note,  setNote]  = useState(routine?.note || '')
   const [exs,   setExs]   = useState(() =>
@@ -84,52 +84,70 @@ function RoutineEditor({ routine, allEx, onSave, onClose, busy }) {
   const addSet = (u) => setExs(e => e.map(x => { if (x.uid !== u) return x; const l = (x.sets || [])[(x.sets || []).length-1]; return { ...x, sets: [...(x.sets || []), { id: uid(), type: l?.type || 'Normal', w: l?.w || '', r: l?.r || '' }] } }))
   const remSet = (u, sid) => setExs(e => e.map(x => x.uid !== u ? x : { ...x, sets: (x.sets || []).filter(s => s.id !== sid) }))
   const updSet = (u, sid, f, v) => setExs(e => e.map(x => x.uid !== u ? x : { ...x, sets: (x.sets || []).map(s => s.id !== sid ? s : { ...s, [f]: v }) }))
-  const save = () => { if (!name.trim()) { alert('Enter a name'); return } onSave({ id: routine?.id || uid(), name, note, exercises: exs }) }
+  const save = () => { if (!name.trim()) { toast('Enter a routine name'); return } onSave({ id: routine?.id || uid(), name, note, exercises: exs }) }
 
   const lbl = { fontSize:'11.5px', color:'var(--text2)', marginBottom:'6px', display:'block', fontWeight:'600', letterSpacing:'.7px', textTransform:'uppercase' }
 
   return (
-    <Modal title={routine ? 'Edit Routine' : 'New Routine'} onClose={onClose} xl>
-      <div style={{ marginBottom:'14px' }}>
-        <label style={lbl}>Name</label>
-        <input className="input" autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Push Day A" />
-      </div>
-      <div style={{ marginBottom:'14px' }}>
-        <label style={lbl}>Notes</label>
-        <input className="input" value={note} onChange={e => setNote(e.target.value)} placeholder="Optional…" />
-      </div>
-
-      {exs.map(ex => (
-        <div key={ex.uid} className="card2" style={{ marginBottom:'10px' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'10px' }}>
-            <div>
-              <div style={{ fontWeight:'600', fontSize:'14px' }}>{ex.name}</div>
-              <span style={{ fontSize:'11px', color: MUSCLE_COLOR[ex.muscle] || 'var(--text3)' }}>● {ex.muscle}</span>
-            </div>
-            <button className="btn-icon" style={{ color:'var(--red)' }} onClick={() => remEx(ex.uid)}>✕</button>
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ display:'flex', flexDirection:'column', padding:0 }}>
+        {/* Fixed Header */}
+        <div style={{ padding:'8px 18px 0', flexShrink:0 }}>
+          {/* Drag handle */}
+          <div style={{ width:'36px', height:'4px', background:'var(--text3)', borderRadius:'2px', margin:'4px auto 14px' }} />
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'14px' }}>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'20px', letterSpacing:'1px' }}>{routine ? 'Edit Routine' : 'New Routine'}</div>
+            <button onClick={onClose}
+              style={{ width:'32px', height:'32px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg3)', border:'1px solid var(--border)', color:'var(--text2)', cursor:'pointer', fontSize:'14px', flexShrink:0 }}>✕</button>
           </div>
-          {(ex.sets || []).map((s, i) => (
-            <div key={s.id} style={{ display:'grid', gridTemplateColumns:'22px 1fr 1fr 70px 32px', gap:'6px', marginBottom:'6px', alignItems:'center' }}>
-              <span style={{ fontSize:'12px', color:'var(--text3)', textAlign:'center', fontFamily:'JetBrains Mono,monospace' }}>{i + 1}</span>
-              <input className="input input-sm" type="number" inputMode="decimal" min="0" value={s.w ?? ""} placeholder="kg" onChange={e => updSet(ex.uid, s.id, 'w', e.target.value)} />
-              <input className="input input-sm" type="number" inputMode="numeric" min="0" value={s.r ?? ""} placeholder="reps" onChange={e => updSet(ex.uid, s.id, 'r', e.target.value)} />
-              <select className="input input-sm" value={s.type || "Normal"} style={{ fontSize:'11px', padding:'8px 4px' }} onChange={e => updSet(ex.uid, s.id, 'type', e.target.value)}>
-                {SET_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
-              <button className="btn-icon" style={{ fontSize:'11px', color:'var(--red)', padding:'4px', minWidth:'32px', minHeight:'32px' }} onClick={() => remSet(ex.uid, s.id)}>✕</button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div style={{ flex:1, overflowY:'auto', padding:'0 18px', WebkitOverflowScrolling:'touch' }}>
+          <div style={{ marginBottom:'14px' }}>
+            <label style={lbl}>Name</label>
+            <input className="input" autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Push Day A" />
+          </div>
+          <div style={{ marginBottom:'14px' }}>
+            <label style={lbl}>Notes</label>
+            <input className="input" value={note} onChange={e => setNote(e.target.value)} placeholder="Optional…" />
+          </div>
+
+          {exs.map(ex => (
+            <div key={ex.uid} className="card2" style={{ marginBottom:'10px' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'10px' }}>
+                <div>
+                  <div style={{ fontWeight:'600', fontSize:'14px' }}>{ex.name}</div>
+                  <span style={{ fontSize:'11px', color: MUSCLE_COLOR[ex.muscle] || 'var(--text3)' }}>● {ex.muscle}</span>
+                </div>
+                <button className="btn-icon" style={{ color:'var(--red)' }} onClick={() => remEx(ex.uid)}>✕</button>
+              </div>
+              {(ex.sets || []).map((s, i) => (
+                <div key={s.id} style={{ display:'grid', gridTemplateColumns:'22px 1fr 1fr 70px 32px', gap:'6px', marginBottom:'6px', alignItems:'center' }}>
+                  <span style={{ fontSize:'12px', color:'var(--text3)', textAlign:'center', fontFamily:'JetBrains Mono,monospace' }}>{i + 1}</span>
+                  <input className="input input-sm" type="number" inputMode="decimal" min="0" value={s.w ?? ""} placeholder="kg" onChange={e => updSet(ex.uid, s.id, 'w', e.target.value)} />
+                  <input className="input input-sm" type="number" inputMode="numeric" min="0" value={s.r ?? ""} placeholder="reps" onChange={e => updSet(ex.uid, s.id, 'r', e.target.value)} />
+                  <select className="input input-sm" value={s.type || "Normal"} style={{ fontSize:'11px', padding:'8px 4px' }} onChange={e => updSet(ex.uid, s.id, 'type', e.target.value)}>
+                    {SET_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                  <button className="btn-icon" style={{ fontSize:'11px', color:'var(--red)', padding:'4px', minWidth:'32px', minHeight:'32px' }} onClick={() => remSet(ex.uid, s.id)}>✕</button>
+                </div>
+              ))}
+              <button className="btn btn-ghost btn-sm" style={{ marginTop:'4px' }} onClick={() => addSet(ex.uid)}>+ Set</button>
             </div>
           ))}
-          <button className="btn btn-ghost btn-sm" style={{ marginTop:'4px' }} onClick={() => addSet(ex.uid)}>+ Set</button>
-        </div>
-      ))}
 
-      <button className="btn btn-secondary" style={{ width:'100%', justifyContent:'center', marginBottom:'16px' }} onClick={() => setShowPick(true)}>+ Add Exercise</button>
-      <div style={{ display:'flex', gap:'10px' }}>
-        <button className="btn btn-ghost" style={{ flex:1, justifyContent:'center' }} onClick={onClose}>Cancel</button>
-        <button className="btn btn-primary" style={{ flex:2, justifyContent:'center' }} onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save Routine'}</button>
+          <button className="btn btn-secondary" style={{ width:'100%', justifyContent:'center', marginBottom:'16px' }} onClick={() => setShowPick(true)}>+ Add Exercise</button>
+        </div>
+
+        {/* Sticky Footer */}
+        <div style={{ padding:'12px 18px', paddingBottom:'calc(12px + var(--safe-bottom))', borderTop:'1px solid var(--border)', background:'var(--bg2)', flexShrink:0, display:'flex', gap:'10px' }}>
+          <button className="btn btn-ghost" style={{ flex:1, justifyContent:'center' }} onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" style={{ flex:2, justifyContent:'center' }} onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save Routine'}</button>
+        </div>
       </div>
       {showPick && <ExercisePicker exercises={allEx} onSelect={addEx} onClose={() => setShowPick(false)} />}
-    </Modal>
+    </div>
   )
 }
 
