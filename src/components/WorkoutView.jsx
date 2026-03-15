@@ -6,16 +6,20 @@ import ExercisePicker from './ExercisePicker'
 // ── Inline Confirm Dialog (replaces window.confirm for mobile) ──
 function ConfirmSheet({ message, onYes, onNo }) {
   return (
-    <div className="overlay" onClick={e => e.target === e.currentTarget && onNo()}>
-      <div className="modal" style={{ maxWidth:'340px' }}>
-        <div style={{ textAlign:'center', padding:'10px 0 20px' }}>
+    <div className="overlay" style={{ alignItems:'center' }} onClick={e => e.target === e.currentTarget && onNo()}>
+      <div style={{
+        background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'20px',
+        width:'calc(100% - 48px)', maxWidth:'320px', padding:'28px 24px 24px',
+        boxShadow:'0 16px 60px rgba(0,0,0,.7)', animation:'mSlideUp .2s ease-out',
+      }}>
+        <div style={{ textAlign:'center', marginBottom:'24px' }}>
           <div style={{ fontSize:'40px', marginBottom:'14px' }}>⚠️</div>
-          <div style={{ fontSize:'16px', fontWeight:'600', marginBottom:'6px' }}>{message}</div>
+          <div style={{ fontSize:'17px', fontWeight:'700', marginBottom:'6px' }}>{message}</div>
           <div style={{ fontSize:'13px', color:'var(--text3)' }}>This action cannot be undone.</div>
         </div>
         <div style={{ display:'flex', gap:'10px' }}>
-          <button className="btn btn-ghost" style={{ flex:1, justifyContent:'center' }} onClick={onNo}>Cancel</button>
-          <button className="btn btn-danger" style={{ flex:1, justifyContent:'center' }} onClick={onYes}>Discard</button>
+          <button className="btn btn-ghost" style={{ flex:1, justifyContent:'center', padding:'12px' }} onClick={onNo}>Cancel</button>
+          <button className="btn btn-danger" style={{ flex:1, justifyContent:'center', padding:'12px' }} onClick={onYes}>Discard</button>
         </div>
       </div>
     </div>
