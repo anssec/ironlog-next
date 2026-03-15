@@ -1,10 +1,9 @@
 import { useEffect } from 'react'
 
-export function Modal({ title, onClose, children, xl = false }) {
+export function Modal({ title, onClose, children, footer, xl = false }) {
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', h)
-    // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', h)
@@ -15,14 +14,22 @@ export function Modal({ title, onClose, children, xl = false }) {
   return (
     <div className="overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal${xl ? ' modal-xl' : ''}`}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px' }}>
+        <div className="modal-handle" />
+        <div className="modal-header">
           <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:'20px', letterSpacing:'1px' }}>{title}</div>
           <button
             onClick={onClose}
             style={{ width:'32px', height:'32px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg3)', border:'1px solid var(--border)', color:'var(--text2)', cursor:'pointer', fontSize:'14px', flexShrink:0 }}
           >✕</button>
         </div>
-        {children}
+        <div className="modal-body">
+          {children}
+        </div>
+        {footer && (
+          <div className="modal-footer">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )
