@@ -39,7 +39,7 @@ export default function ExercisePicker({ exercises, onSelect, onClose }) {
         ))}
       </div>
 
-      <div style={{ maxHeight:'50vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:'6px', WebkitOverflowScrolling:'touch' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
         {list.length === 0 && (
           <div style={{ textAlign:'center', padding:'30px', color:'var(--text3)', fontSize:'14px' }}>No exercises found</div>
         )}
